@@ -1,0 +1,16 @@
+Etant donné que la première partie a été effectué sur ARM, celle ci est sur x86 :
+
+Pour l'analyse du binaire "crackme" en x86, j'ai utilisé objdump pour inspecter le code assembleur, redirigeant sa sortie vers un fichier pour une meilleure navigation. Mon intérêt s'est porté sur une instruction de saut à l'adresse 0x4011d, critique pour la validation du mot de passe. Voici l'instruction pertinente :
+ 
+  if (pswd_valid) {
+   40119:   83 7d f8 00          cmpl   $0x0,-0x8(%ebp)
+   4011d:   74 21                je     40140 <main+0xea>
+   
+   
+
+Visant à neutraliser cette vérification, j'ai remplacé l'instruction de saut par deux NOP :
+
+=> mw.b 0x4011d 0x90
+=> mw.b 0x4011e 0x90
+
+Après cette modification, en lançant le programme (go 0x40000) et en entrant n'importe quel mot de passe, j'ai réussi à accéder directement au message de victoire. En désactivant le saut conditionnel, le programme a ignoré la vérification du mot de passe et a continué son exécution jusqu'au succès.

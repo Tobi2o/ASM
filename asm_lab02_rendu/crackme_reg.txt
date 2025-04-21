@@ -1,0 +1,29 @@
+
+Cette partie concerne l'analyse de la fonction check_password dans l'environnement ARM :
+
+Dans la fonction check_password, l'intérêt principal réside dans le traitement du retour et de la fin de fonction. Voici à quoi ressemblait le code assembleur pour ces sections :
+
+15                return (hash == MY_HASH);
+82000064:   ldr     r2, [r11, #-8]
+82000068:   movw    r3, #48879      ; 0xbeef
+8200006c:   movt    r3, #57005      ; 0xdead
+82000070:   cmp     r2, r3
+82000074:   moveq   r3, #1
+82000078:   movne   r3, #0
+8200007c:   uxtb    r3, r3
+16        }
+82000080:   mov     r0, r3
+82000084:   add     sp, r11, #0
+82000088:   pop     {r11}           ; (ldr r11, [sp], #4)
+8200008c:   bx      lr
+
+
+L'analyse se concentre sur le moment du retour de la fonction check_password, où les instructions 15 et 16 sont cruciales. Dans ce contexte, le registre r2 reçoit la valeur entrée, et le registre r3 est initialisé avec la valeur de vérification (intéressant de noter l'utilisation des valeurs 0xbeef et 0xdead). Une comparaison est effectuée : si r2 égale r3, r3 devient 1 (vrai), sinon 0 (faux).
+
+L'astuce pour réussir consiste à forcer r3 à valoir 1 juste avant de quitter la fonction, manipulant ainsi le résultat pour qu'il soit toujours interprété comme correct. J'ai appliqué cette modification entre les instructions 15 et 16, assurant ainsi que r3 vaut 1 lors de la vérification du succès de l'opération.
+
+Réponses aux questions :
+
+Q1. Plutôt que de manipuler le résultat après comparaison, une méthode consisterait à préparer le registre r2 avec la valeur attendue en r3 avant que la comparaison ne se réalise, assurant ainsi une égalité.
+
+Q2. Concernant la modification du compteur de programme (PC), il s'agit d'une pratique risquée pouvant mener à des comportements imprévisibles du programme. Une approche plus sûre pour rediriger l'exécution serait d'exploiter une faille comme un débordement de tampon, permettant de naviguer vers des sections de code spécifiques de manière contrôlée.
